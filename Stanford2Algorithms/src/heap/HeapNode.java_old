@@ -1,0 +1,131 @@
+package Week1;
+
+import java.util.Comparator;
+import java.util.Vector;
+
+public class HeapNode {
+
+	private Vector<Node> elmts;
+	private int next;
+	private Comparator<Node> comparator;
+	
+//	private int nodesInfo[];
+//	private int nodesWeight[];
+	
+	public HeapNode(){
+		this.elmts = new Vector<Node>();
+		this.next = 0;
+		this.comparator = new NodeComparator();
+	}
+	
+	public void add(Node t){
+		elmts.add(t);
+		t.info = next;
+		
+		this.bubbleUp(next);
+		next++;
+	}
+	
+	private void bubbleUp(int childIndex){
+		while(childIndex > 0){
+			int parentIndex = (childIndex - 1)/2;
+			
+			Node parent = elmts.elementAt(parentIndex);
+			Node child = elmts.elementAt(childIndex);
+			
+			if(comparator.compare(parent, child) > 0){//parent is bigger then child
+				//swap elements
+				this.setElementAt(parent, childIndex);
+				this.setElementAt(child, parentIndex);
+				
+				childIndex = parentIndex;
+			}else{
+				//parent is smaller then child. heap property restored
+				break;
+			}
+		}
+	}
+	
+	public Node extractMin(){
+		Node min = this.min();
+		
+		//delete root and move the last element to be new root
+		Node last = removeLast();
+		if(next > 0){
+			this.setElementAt(last, 0);	
+		}
+		
+		bubbleDown(0);
+		
+		return min;
+	}
+	
+	private void bubbleDown(int parentIndex){
+		//if there is no child, i don't proceed
+		while(parentIndex*2 + 1 < next){
+			//get the smallest child. Children in i*2+1 e i*2+2
+			int childIndex = parentIndex*2 + 1;
+			if(childIndex+1 < next && comparator.compare(elmts.elementAt(childIndex), elmts.elementAt(childIndex+1)) > 0){
+				childIndex++;
+			}
+			
+			Node parent = elmts.elementAt(parentIndex);
+			Node child = elmts.elementAt(childIndex);
+
+			if(comparator.compare(parent, child) > 0){//parent is bigger then child
+				//swap elements
+				this.setElementAt(parent, childIndex);
+				this.setElementAt(child, parentIndex);
+
+				parentIndex = childIndex;
+			}else{
+				//parent is smaller then child. heap property restored. 
+				break;
+			}
+		}
+	}
+	
+	public Node min(){
+		return this.elmts.elementAt(0);
+	}
+	
+	public void heapify(Vector<Node> elmts){
+		//NodeODO
+	}
+	
+	public void delete(Node t){	
+		int i = t.info;
+		
+		if(i < 0){ //no such element exists
+			return;
+		}
+		
+		if(i == next-1){ //the element to be deleted is the last one. just delete it. dont need to bubble up and down
+			removeLast();
+		}
+		else{
+			//delete element with index i and move the last element to i
+			Node last = removeLast();
+			this.setElementAt(last, i);
+			
+			//bubble i up and down
+			bubbleUp(i);
+			bubbleDown(i);
+		}
+		
+	}
+
+	private Node removeLast() {
+		Node last = elmts.lastElement();
+		next--;
+		elmts.remove(next);
+		last.info = -1;
+		return last;
+	}	
+	
+	private void setElementAt(Node n, int index){
+		this.elmts.setElementAt(n, index);
+		n.info = index;
+	}
+	
+}
