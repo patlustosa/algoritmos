@@ -1,40 +1,53 @@
 package graph;
 
+import java.util.Collections;
 import java.util.Vector;
 
 
 public class DijkstraAlgorithm {
 
-	public static int bestPath(Graph g, Node from, Node to){
+	Graph graph;
+	Node from;
+	Edge[] pathEdge;
+	int[] pathCost;
+	
+	public DijkstraAlgorithm(Graph g){
+		this.graph = g;
+	}
+	
+	public void bestPath(Node from){
+		bestPathNaive(from);
+	}
+	
+	private void bestPathNaive(Node from){
 		
-		int qntNodes = g.getNodes().length;
+		this.from = from;
+		int qntNodes = graph.getNodes().length;
 		
 		//create X and puts the source node in it
 		boolean[] belongsToX = new boolean[qntNodes];
 		belongsToX[from.number] = true;
 		
-		//initialize currentNode with the source node
-		Node currentNode = from;
-		
-		Edge[] edges = g.getEdges();
+		Edge[] edges = graph.getEdges();
 		
 		//initialize array of pathEdges and pathCosts
-		Edge[] pathEdge = new Edge[qntNodes];
-		int[] pathCost = new int[qntNodes];
+		pathEdge = new Edge[qntNodes];
+		pathCost = new int[qntNodes];
 		pathCost[from.number] = 0;
 		
-		//while the current node is not the destination node, keep expanding the search
-		while(!currentNode.equals(to)){
+		//main loop
+		while(true){
 			Edge min = null;
 			int minValue = Integer.MAX_VALUE;
 			
+			//find the edge in frontier with minimum path cost 
 			for(Edge e : edges){
 				if((belongsToX[e.n1.number] && !belongsToX[e.n2.number]) 
-				|| (!belongsToX[e.n1.number] && belongsToX[e.n2.number])){ //one node in X and other node in V-X
-					
-					Node parentNode = min.n1;
-					if(!belongsToX[min.n1.number]){
-						parentNode = min.n2;
+				|| (!belongsToX[e.n1.number] && belongsToX[e.n2.number])){ //one node in X and other node in V-X: node in the frontier
+					//get parent
+					Node parentNode = e.n1;
+					if(!belongsToX[e.n1.number]){
+						parentNode = e.n2;
 					}
 					
 					//calculate the cost of path to e
@@ -47,6 +60,11 @@ public class DijkstraAlgorithm {
 				}
 			}
 			
+			//if didnt find an edge with one node in X and other node in V-X, the search is over.
+			if(min == null){
+				break;
+			}
+			
 			//add new node to X
 			Node newNode = min.n1;
 			if(!belongsToX[min.n2.number]){
@@ -57,22 +75,90 @@ public class DijkstraAlgorithm {
 			//set the cost of newNode path
 			pathCost[newNode.number] = minValue;
 			
-			//parent of newNode is currentNode. Need to set this so that I can trace the path back when I find the destination
+			//min is the edge from which i get to newNode. Need to set this so that I can trace the path back when I find the destination
 			pathEdge[newNode.number] = min;
-			
-			//set current node
-			currentNode = newNode;	
 		}
+	}
+	
+	private void bestPathHeap(Node from){
 		
-		//create path result
+		this.from = from;
+		int qntNodes = graph.getNodes().length;
+		
+		//create X and puts the source node in it
+		boolean[] belongsToX = new boolean[qntNodes];
+		belongsToX[from.number] = true;
+		
+		Edge[] edges = graph.getEdges();
+		
+		//initialize array of pathEdges and pathCosts
+		pathEdge = new Edge[qntNodes];
+		pathCost = new int[qntNodes];
+		pathCost[from.number] = 0;
+		
+		//main loop
+		while(true){
+			Edge min = null;
+			int minValue = Integer.MAX_VALUE;
+			
+			//find the edge in frontier with minimum path cost 
+			for(Edge e : edges){
+				if((belongsToX[e.n1.number] && !belongsToX[e.n2.number]) 
+				|| (!belongsToX[e.n1.number] && belongsToX[e.n2.number])){ //one node in X and other node in V-X: node in the frontier
+					//get parent
+					Node parentNode = e.n1;
+					if(!belongsToX[e.n1.number]){
+						parentNode = e.n2;
+					}
+					
+					//calculate the cost of path to e
+					int ePathCost =  e.cost + pathCost[parentNode.number];
+					
+					if(ePathCost < minValue){ // e is better than previous min
+						min = e;
+						minValue = ePathCost;
+					}
+				}
+			}
+			
+			//if didnt find an edge with one node in X and other node in V-X, the search is over.
+			if(min == null){
+				break;
+			}
+			
+			//add new node to X
+			Node newNode = min.n1;
+			if(!belongsToX[min.n2.number]){
+				newNode = min.n2;
+			}
+			belongsToX[newNode.number] = true;
+			
+			//set the cost of newNode path
+			pathCost[newNode.number] = minValue;
+			
+			//min is the edge from which i get to newNode. Need to set this so that I can trace the path back when I find the destination
+			pathEdge[newNode.number] = min;
+		}
+	}
+	
+	
+	public Vector<Edge> getEdgesOnPath(Node destination){
+		Node currentNode = destination;
+		
 		Vector<Edge> result = new Vector<Edge>();
 		while(!currentNode.equals(from)){
 			Edge e = pathEdge[currentNode.number];
 			result.add(e);
 			currentNode = e.n2.equals(currentNode) ? e.n1 : e.n2;
 		}
+		//I add the edges from destination to source. So I need to reverse the list.
+		Collections.reverse(result);
 		
-		return pathCost[to.number];
+		return result;
+	}
+	
+	public int getPathCost(int destination){
+		return pathCost[destination];
 	}
 	
 }
