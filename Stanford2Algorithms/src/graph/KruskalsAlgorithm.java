@@ -1,39 +1,66 @@
 package graph;
 
-import heap.HeapNode;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
-
 import unionFind.UnionFind;
 
 public class KruskalsAlgorithm {
 
-	public static Vector<Edge> computeMinimumSpanningTree(Graph g){
+	private Graph graph;
+	Vector<Edge> mst;
+	UnionFind unionFind;
+	
+	public KruskalsAlgorithm(Graph g){
+		this.graph = g;
+	}
+	
+	public Vector<Edge> computeMinimumSpanningTree(){
+		runKruskal(1);
+		return this.mst;
+	}
+	
+	public UnionFind computeComponents(int qntComponents){
+		runKruskal(qntComponents);
+		return this.unionFind;
+	}
+	
+	private void runKruskal(int qntComponents){
 		//minimum spanning tree
-		Vector<Edge> mst = new Vector<Edge>();
+		mst = new Vector<Edge>();
 
-		int qntNodes = g.getNodes().length;
-		
 		//initializing unionFind
-		//UnionFind<Node> uf = new UnionFind<Node>(g.getNodes());
+		int qntNodes = graph.getNodes().length;
+		unionFind = new UnionFind(qntNodes);
 
+		//ordering edges
+		List<Edge> sortedEdges = Arrays.asList(graph.getEdges());
+		Collections.sort(sortedEdges, new EdgeComparator());
+
+		//creating iterator of ordered edges
+		Iterator<Edge> iterator = sortedEdges.iterator();
+
+		int qntLoop = qntNodes - qntComponents + 1;
+		
 		//main loop
-		for(int i = 1; i < qntNodes; i++){			
-//			//find minimum edge that crosses the frontier
-//			Node newNode = heap.extractMin();
-//			Edge min = heap.getNodeMinEdge(newNode);
-//
-//			//add new node to X
-//			belongsToX[newNode.number] = true;
-//
-//			//add minimum edge to tree
-//			mst.add(min);
-//
-//			//restore heap properties
-//			restoreHeapProperties(newNode, heap);
+		for(int i = 1; i < qntLoop; i++){			
+
+			//find min edge that doesn´t form loops
+			Edge e = iterator.next(); 
+			while(unionFind.connected(e.n1.getNumber(), e.n2.getNumber())){
+				e = iterator.next();
+			}
+
+			//connect nodes of chosen edge
+			unionFind.union(e.n1.getNumber(), e.n2.getNumber());
+
+			//add edge to mst
+			mst.add(e);
+
 		}
 
-		return mst;
 	}
 	
 }

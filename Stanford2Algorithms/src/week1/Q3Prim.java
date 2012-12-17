@@ -2,6 +2,7 @@ package week1;
 
 import graph.Edge;
 import graph.Graph;
+import graph.KruskalsAlgorithm;
 import graph.Node;
 import graph.PrimsAlgorithm;
 
